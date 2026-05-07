@@ -3,6 +3,8 @@ const dotenv = require('dotenv');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 const { sequelize } = require('./models');
 
 dotenv.config();
@@ -10,18 +12,12 @@ dotenv.config();
 const app = express();
 
 // --- Security Headers ---
-// helmet adds ~15 HTTP headers that protect against common attacks
-// like clickjacking, XSS, and sniffing
 app.use(helmet());
 
 // --- CORS ---
-// Allows your frontend (e.g. a React app) to talk to this API
-// Right now it allows all origins — lock this down in production
 app.use(cors());
 
 // --- Rate Limiting ---
-// Limits each IP to 100 requests per 15 minutes
-// Protects against brute force and spam attacks
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -32,7 +28,6 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// Stricter limiter for auth routes specifically
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -42,7 +37,11 @@ const authLimiter = rateLimit({
   },
 });
 
+// --- Body Parser ---
 app.use(express.json());
+
+// --- Swagger Docs ---
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // --- Routes ---
 const authRoutes = require('./routes/auth.routes');
@@ -53,8 +52,12 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/comments', commentRoutes);
 
+// --- Root Health Check ---
 app.get('/', (req, res) => {
-  res.json({ message: '🛡️ ShieldMe API is running.' });
+  res.json({ 
+    message: '🛡️ ShieldMe API is running.',
+    docs: 'http://localhost:5000/api-docs'
+  });
 });
 
 // --- Global Error Handler ---
@@ -76,6 +79,7 @@ const startServer = async () => {
     console.log('✅ All models were synchronized successfully.');
     app.listen(PORT, () => {
       console.log(`🚀 ShieldMe server running on http://localhost:${PORT}`);
+      console.log(`📚 API Docs available at http://localhost:${PORT}/api-docs`);
     });
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error.message);
