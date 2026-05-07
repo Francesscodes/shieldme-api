@@ -4,9 +4,8 @@ such as bad roads, flooding, and waste management issues — and track their
 resolution status. Built to promote accountability between Lagos residents 
 and government officials.
 
-Built with Node.js, Express, MySQL, and Sequelize.
-Features JWT authentication, role-based access control (citizens and admins),
-input validation, rate limiting and security headers.
+Stack: Node.js, Express, MySQL, Sequelize
+Features: JWT auth, RBAC (citizens + admins), status tracking (Pending → In-Review → Resolved), comments, report following, Helmet, CORS, rate limiting, Swagger docs
 
 Key features:
 - Citizen signup/login with secure JWT authentication
